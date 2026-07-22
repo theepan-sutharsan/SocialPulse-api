@@ -15,6 +15,9 @@ test:
 lint:
 	ruff check app worker tests
 
+format:
+	ruff format app worker tests
+
 worker:
 	celery -A worker.celery_app.celery worker --loglevel=info
 
