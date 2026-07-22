@@ -16,6 +16,9 @@ class User(db.Model):
     is_platform_admin = db.Column(db.Boolean, default=False, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     memberships = db.relationship(
         "WorkspaceMember",
@@ -52,4 +55,5 @@ class User(db.Model):
             "is_platform_admin": self.is_platform_admin,
             "is_active": self.is_active,
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
