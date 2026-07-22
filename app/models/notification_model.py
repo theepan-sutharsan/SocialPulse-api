@@ -11,10 +11,10 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     workspace_id = db.Column(
-        db.Integer, db.ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+        db.Integer, db.ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True
     )
     type = db.Column(db.String(30), nullable=False)
     message = db.Column(db.String(500), nullable=False)
