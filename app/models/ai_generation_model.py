@@ -11,7 +11,10 @@ class AIGeneration(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     workspace_id = db.Column(
-        db.Integer, db.ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+        db.Integer,
+        db.ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     social_account_id = db.Column(
         db.Integer,
