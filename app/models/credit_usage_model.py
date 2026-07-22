@@ -27,6 +27,9 @@ class CreditUsage(db.Model):
     def credits_remaining(self) -> int:
         return max(self.credits_allotted - self.credits_used, 0)
 
+    def __repr__(self) -> str:
+        return f"<CreditUsage ws{self.workspace_id} {self.credits_used}/{self.credits_allotted}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
