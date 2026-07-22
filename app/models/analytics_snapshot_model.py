@@ -30,6 +30,9 @@ class AnalyticsSnapshot(db.Model):
     view_count = db.Column(db.BigInteger, default=0, nullable=False)
     engagement_rate = db.Column(db.Numeric(6, 2), default=0, nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     social_account = db.relationship("SocialAccount", back_populates="snapshots")
 
@@ -47,4 +50,5 @@ class AnalyticsSnapshot(db.Model):
                 float(self.engagement_rate) if self.engagement_rate is not None else 0.0
             ),
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
