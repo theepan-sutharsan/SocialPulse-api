@@ -27,6 +27,9 @@ class WorkspaceMember(db.Model):
     invited_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     joined_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     user = db.relationship("User", back_populates="memberships")
     workspace = db.relationship("Workspace", back_populates="members")
@@ -43,6 +46,7 @@ class WorkspaceMember(db.Model):
             "invited_at": iso(self.invited_at),
             "joined_at": iso(self.joined_at),
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
             # Convenience denormalization for member tables in the UI.
             "user_email": self.user.email if self.user else None,
             "user_full_name": self.user.full_name if self.user else None,
