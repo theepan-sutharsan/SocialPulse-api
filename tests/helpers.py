@@ -44,6 +44,6 @@ def set_plan(app, workspace_id, plan_tier):
     from app.models.workspace_model import Workspace
 
     with app.app_context():
-        ws = Workspace.query.get(workspace_id)
+        ws = db.session.get(Workspace, workspace_id)
         ws.plan_tier = plan_tier
         db.session.commit()
