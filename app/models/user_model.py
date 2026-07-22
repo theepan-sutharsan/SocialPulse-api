@@ -41,6 +41,9 @@ class User(db.Model):
             for m in self.memberships
         ]
 
+    def __repr__(self) -> str:
+        return f"<User {self.id} {self.email}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
