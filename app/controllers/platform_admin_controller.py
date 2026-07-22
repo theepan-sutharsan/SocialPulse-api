@@ -32,7 +32,7 @@ def list_workspaces():
 
 
 def get_workspace(workspace_id: int):
-    workspace = Workspace.query.get(workspace_id)
+    workspace = db.session.get(Workspace, workspace_id)
     if workspace is None:
         return jsonify({"error": "Workspace not found."}), 404
     members = WorkspaceMember.query.filter_by(workspace_id=workspace_id).all()
@@ -50,7 +50,7 @@ def get_workspace(workspace_id: int):
 
 
 def update_plan(workspace_id: int):
-    workspace = Workspace.query.get(workspace_id)
+    workspace = db.session.get(Workspace, workspace_id)
     if workspace is None:
         return jsonify({"error": "Workspace not found."}), 404
     data = request.get_json(silent=True) or {}
