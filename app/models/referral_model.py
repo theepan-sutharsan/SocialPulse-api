@@ -11,7 +11,7 @@ class Referral(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     referrer_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     referred_email = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(20), default="pending", nullable=False)
