@@ -20,6 +20,9 @@ class CreditUsage(db.Model):
     credits_allotted = db.Column(db.Integer, default=0, nullable=False)
     credits_used = db.Column(db.Integer, default=0, nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     workspace = db.relationship("Workspace", back_populates="credit_usages")
 
@@ -39,4 +42,5 @@ class CreditUsage(db.Model):
             "credits_used": self.credits_used,
             "credits_remaining": self.credits_remaining,
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
