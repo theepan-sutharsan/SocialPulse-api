@@ -3,6 +3,7 @@
 from flask import Blueprint
 
 from app.controllers import platform_admin_controller as ctrl
+from app.controllers import platform_setting_controller as settings_ctrl
 from app.middleware import roles_required
 
 platform_admin_bp = Blueprint(
@@ -26,3 +27,15 @@ def get_workspace(workspace_id):
 @roles_required("platform_admin")
 def update_plan(workspace_id):
     return ctrl.update_plan(workspace_id)
+
+
+@platform_admin_bp.get("/settings")
+@roles_required("platform_admin")
+def get_settings():
+    return settings_ctrl.admin_list_settings()
+
+
+@platform_admin_bp.put("/settings")
+@roles_required("platform_admin")
+def update_settings():
+    return settings_ctrl.admin_update_settings()

@@ -15,6 +15,7 @@ def register_blueprints(app: Flask) -> None:
     from app.routes.platform_admin_routes import platform_admin_bp
     from app.routes.referral_routes import referral_bp
     from app.routes.scheduled_post_routes import scheduled_post_bp
+    from app.routes.settings_routes import settings_bp
     from app.routes.social_account_routes import social_account_bp
     from app.routes.workspace_routes import workspace_bp
 
@@ -32,5 +33,6 @@ def register_blueprints(app: Flask) -> None:
         dashboard_bp,
         notification_bp,
         referral_bp,
+        settings_bp,
     ):
         app.register_blueprint(blueprint)
