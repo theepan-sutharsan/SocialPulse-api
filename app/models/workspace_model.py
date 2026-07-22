@@ -51,6 +51,9 @@ class Workspace(db.Model):
         "CreditUsage", back_populates="workspace", cascade="all, delete-orphan"
     )
 
+    def __repr__(self) -> str:
+        return f"<Workspace {self.id} {self.slug}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
