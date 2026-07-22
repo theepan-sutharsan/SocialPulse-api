@@ -31,6 +31,9 @@ class AIGeneration(db.Model):
         "ScheduledPost", back_populates="ai_generation", uselist=False
     )
 
+    def __repr__(self) -> str:
+        return f"<AIGeneration {self.id} {self.generation_type}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
