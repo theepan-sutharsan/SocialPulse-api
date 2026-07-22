@@ -33,6 +33,9 @@ class AnalyticsSnapshot(db.Model):
 
     social_account = db.relationship("SocialAccount", back_populates="snapshots")
 
+    def __repr__(self) -> str:
+        return f"<AnalyticsSnapshot acct{self.social_account_id} {self.snapshot_date}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
