@@ -155,7 +155,7 @@ def _process_event(event_type: str, obj: dict) -> None:
     if not workspace_id:
         logger.info("Webhook %s ignored: no workspace_id.", event_type)
         return
-    workspace = Workspace.query.get(int(workspace_id))
+    workspace = db.session.get(Workspace, int(workspace_id))
     if workspace is None:
         return
 
