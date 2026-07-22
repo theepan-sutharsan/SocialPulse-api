@@ -28,6 +28,10 @@ class Config:
     HOST = os.getenv("HOST", "0.0.0.0")
     PORT = int(os.getenv("PORT", "5000"))
 
+    # Response behaviour
+    JSON_SORT_KEYS = False
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # cap request bodies at 5 MB
+
     # --- Database (MySQL via PyMySQL) ---
     DB_USER = os.getenv("DB_USER", "root")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "")
