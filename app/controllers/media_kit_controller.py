@@ -54,7 +54,7 @@ def get_media_kit(workspace_slug: str):
 
 def update_media_kit():
     """Owner/Editor — update branding, bio, tagline, logo (white-label = Agency)."""
-    workspace = Workspace.query.get(current_workspace.id)
+    workspace = db.session.get(Workspace, current_workspace.id)
     data = request.get_json(silent=True) or {}
 
     if "bio" in data:
