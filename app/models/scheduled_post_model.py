@@ -14,7 +14,10 @@ class ScheduledPost(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     workspace_id = db.Column(
-        db.Integer, db.ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+        db.Integer,
+        db.ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     ai_generation_id = db.Column(
         db.Integer,
