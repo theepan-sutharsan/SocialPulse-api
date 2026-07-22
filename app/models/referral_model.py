@@ -16,6 +16,9 @@ class Referral(db.Model):
     referred_email = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(20), default="pending", nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     referrer = db.relationship("User")
 
@@ -29,4 +32,5 @@ class Referral(db.Model):
             "referred_email": self.referred_email,
             "status": self.status,
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
