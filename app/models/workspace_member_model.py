@@ -31,6 +31,9 @@ class WorkspaceMember(db.Model):
     user = db.relationship("User", back_populates="memberships")
     workspace = db.relationship("Workspace", back_populates="members")
 
+    def __repr__(self) -> str:
+        return f"<WorkspaceMember u{self.user_id} w{self.workspace_id} {self.role}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
