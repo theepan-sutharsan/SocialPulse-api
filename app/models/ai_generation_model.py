@@ -24,6 +24,9 @@ class AIGeneration(db.Model):
     provider = db.Column(db.String(50), nullable=True)
     credits_used = db.Column(db.Integer, default=1, nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     workspace = db.relationship("Workspace", back_populates="ai_generations")
     social_account = db.relationship("SocialAccount")
@@ -45,4 +48,5 @@ class AIGeneration(db.Model):
             "provider": self.provider,
             "credits_used": self.credits_used,
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
