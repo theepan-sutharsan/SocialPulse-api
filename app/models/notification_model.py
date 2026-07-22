@@ -23,6 +23,9 @@ class Notification(db.Model):
 
     user = db.relationship("User", back_populates="notifications")
 
+    def __repr__(self) -> str:
+        return f"<Notification {self.id} {self.type}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
