@@ -30,6 +30,9 @@ class ScheduledPost(db.Model):
     scheduled_at = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default="planned", nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     workspace = db.relationship("Workspace", back_populates="scheduled_posts")
     ai_generation = db.relationship("AIGeneration", back_populates="scheduled_post")
@@ -49,6 +52,7 @@ class ScheduledPost(db.Model):
             "scheduled_at": iso(self.scheduled_at),
             "status": self.status,
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
             "platform": account.platform if account else None,
             "handle": account.handle if account else None,
         }
