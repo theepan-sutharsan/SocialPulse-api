@@ -97,7 +97,7 @@ def _register_jwt_callbacks() -> None:
     @jwt.user_lookup_loader
     def _lookup(_header, data):
         try:
-            return User.query.get(int(data["sub"]))
+            return db.session.get(User, int(data["sub"]))
         except (TypeError, ValueError):
             return None
 
