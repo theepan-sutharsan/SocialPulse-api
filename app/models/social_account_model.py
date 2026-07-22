@@ -20,7 +20,10 @@ class SocialAccount(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     workspace_id = db.Column(
-        db.Integer, db.ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+        db.Integer,
+        db.ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     platform = db.Column(db.String(20), nullable=False)
     handle = db.Column(db.String(255), nullable=False)
