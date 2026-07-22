@@ -28,6 +28,9 @@ class Subscription(db.Model):
 
     workspace = db.relationship("Workspace", back_populates="subscription")
 
+    def __repr__(self) -> str:
+        return f"<Subscription ws{self.workspace_id} {self.plan_tier}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
