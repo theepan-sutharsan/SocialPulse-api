@@ -29,6 +29,9 @@ class SocialAccount(db.Model):
     refresh_token = db.Column(db.Text, nullable=True)  # encrypted
     connected_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     workspace = db.relationship("Workspace", back_populates="social_accounts")
     snapshots = db.relationship(
@@ -59,6 +62,7 @@ class SocialAccount(db.Model):
             "is_connected": self.is_connected,
             "connected_at": iso(self.connected_at),
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
             "follower_count": latest.follower_count if latest else 0,
             "view_count": latest.view_count if latest else 0,
             "engagement_rate": (
