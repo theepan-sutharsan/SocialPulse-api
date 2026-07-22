@@ -31,6 +31,7 @@ current_member = LocalProxy(lambda: getattr(g, "current_member", None))
 def _resolve_workspace(user):
     """Resolve the active workspace from ``X-Workspace-Id`` (falls back to the
     user's first membership) and validate the user belongs to it."""
+    from app.extensions import db
     from app.models.workspace_member_model import WorkspaceMember
     from app.models.workspace_model import Workspace
 
@@ -52,7 +53,7 @@ def _resolve_workspace(user):
             return None, None, ("No workspace context available.", 400)
         return member.workspace, member, None
 
-    workspace = Workspace.query.get(workspace_id)
+    workspace = db.session.get(Workspace, workspace_id)
     if workspace is None:
         return None, None, ("Workspace not found.", 404)
 
