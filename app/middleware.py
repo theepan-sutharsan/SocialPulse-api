@@ -19,10 +19,8 @@ from flask import g, jsonify, request
 from flask_jwt_extended import current_user, verify_jwt_in_request
 from werkzeug.local import LocalProxy
 
-# Role sets reused across route definitions.
-ALL_ROLES = ("owner", "editor", "viewer")
-EDITOR_ROLES = ("owner", "editor")
-OWNER_ONLY = ("owner",)
+# Role sets reused across route definitions (canonical source: app.constants).
+from app.constants import ALL_ROLES, EDITOR_ROLES, OWNER_ONLY  # noqa: E402  (re-export)
 
 current_workspace = LocalProxy(lambda: getattr(g, "current_workspace", None))
 current_member = LocalProxy(lambda: getattr(g, "current_member", None))
