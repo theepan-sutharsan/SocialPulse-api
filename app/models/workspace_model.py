@@ -28,6 +28,9 @@ class Workspace(db.Model):
     is_white_label = db.Column(db.Boolean, default=False, nullable=False)
 
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     members = db.relationship(
         "WorkspaceMember", back_populates="workspace", cascade="all, delete-orphan"
@@ -68,4 +71,5 @@ class Workspace(db.Model):
             "is_white_label": self.is_white_label,
             "member_count": len(self.members),
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
