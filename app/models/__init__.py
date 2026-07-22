@@ -8,6 +8,7 @@ from app.models.ai_generation_model import AIGeneration
 from app.models.analytics_snapshot_model import AnalyticsSnapshot
 from app.models.credit_usage_model import CreditUsage
 from app.models.notification_model import Notification
+from app.models.platform_setting_model import PlatformSetting
 from app.models.referral_model import Referral
 from app.models.scheduled_post_model import ScheduledPost
 from app.models.social_account_model import SocialAccount
@@ -27,5 +28,6 @@ __all__ = [
     "Subscription",
     "CreditUsage",
     "Notification",
+    "PlatformSetting",
     "Referral",
 ]
