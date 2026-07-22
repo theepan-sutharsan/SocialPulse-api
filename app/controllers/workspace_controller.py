@@ -36,7 +36,7 @@ def _get_membership(workspace_id: int, user_id: int | None = None):
 
 def _load_workspace_for_member(workspace_id: int, required_roles: tuple | None = None):
     """Return ``(workspace, None)`` or ``(None, error_response)``."""
-    workspace = Workspace.query.get(workspace_id)
+    workspace = db.session.get(Workspace, workspace_id)
     if workspace is None:
         return None, (jsonify({"error": "Workspace not found."}), 404)
     if current_user.is_platform_admin:
