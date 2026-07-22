@@ -25,6 +25,9 @@ class Subscription(db.Model):
     status = db.Column(db.String(20), default="active", nullable=False)
     current_period_end = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     workspace = db.relationship("Workspace", back_populates="subscription")
 
@@ -42,4 +45,5 @@ class Subscription(db.Model):
             "status": self.status,
             "current_period_end": iso(self.current_period_end),
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
