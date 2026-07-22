@@ -45,6 +45,9 @@ class SocialAccount(db.Model):
     def latest_snapshot(self):
         return self.snapshots[-1] if self.snapshots else None
 
+    def __repr__(self) -> str:
+        return f"<SocialAccount {self.id} {self.platform}:{self.handle}>"
+
     def to_dict(self) -> dict:
         latest = self.latest_snapshot()
         return {
