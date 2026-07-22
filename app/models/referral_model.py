@@ -19,6 +19,9 @@ class Referral(db.Model):
 
     referrer = db.relationship("User")
 
+    def __repr__(self) -> str:
+        return f"<Referral {self.id} {self.status}>"
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
