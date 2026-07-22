@@ -35,6 +35,9 @@ class ScheduledPost(db.Model):
     ai_generation = db.relationship("AIGeneration", back_populates="scheduled_post")
     social_account = db.relationship("SocialAccount")
 
+    def __repr__(self) -> str:
+        return f"<ScheduledPost {self.id} {self.status}>"
+
     def to_dict(self) -> dict:
         account = self.social_account
         return {
