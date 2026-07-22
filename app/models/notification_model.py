@@ -20,6 +20,9 @@ class Notification(db.Model):
     message = db.Column(db.String(500), nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     user = db.relationship("User", back_populates="notifications")
 
@@ -35,4 +38,5 @@ class Notification(db.Model):
             "message": self.message,
             "is_read": self.is_read,
             "created_at": iso(self.created_at),
+            "updated_at": iso(self.updated_at),
         }
