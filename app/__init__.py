@@ -31,7 +31,23 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     @app.get("/health")
     def health():
-        return {"status": "ok", "service": "social-ai-saas-api"}
+        db_ok = True
+        try:
+            db.session.execute(db.text("SELECT 1"))
+        except Exception:  # noqa: BLE001
+            db_ok = False
+        return {
+            "status": "ok" if db_ok else "degraded",
+            "service": "social-ai-saas-api",
+            "database": db_ok,
+        }
+
+    @app.after_request
+    def _security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        return response
 
     return app
 
