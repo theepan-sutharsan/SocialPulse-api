@@ -14,7 +14,10 @@ class CreditUsage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     workspace_id = db.Column(
-        db.Integer, db.ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+        db.Integer,
+        db.ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     period_start = db.Column(db.Date, nullable=False)
     credits_allotted = db.Column(db.Integer, default=0, nullable=False)
