@@ -4,7 +4,7 @@ from app.models.user_model import User
 
 def _make_admin(app, user_id):
     with app.app_context():
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         user.is_platform_admin = True
         db.session.commit()
 
