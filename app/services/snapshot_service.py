@@ -38,21 +38,40 @@ def _upsert_snapshot(account: SocialAccount, snap_date: date, point: dict) -> bo
 
 
 def _live_point(account: SocialAccount) -> dict | None:
-    """Fetch a live data point for a connected YouTube account, or None."""
-    if account.platform != "youtube" or not account.is_connected:
+    """Fetch a real data point for a YouTube account (OAuth or public), or None."""
+    if account.platform != "youtube":
         return None
-    try:
-        token = decrypt_token(account.access_token)
-        stats = youtube_service.fetch_channel_stats(token)
-        engagement = mock_platform_service.generate_daily_point(account)["engagement_rate"]
-        return {
-            "follower_count": stats["subscriber_count"],
-            "view_count": stats["view_count"],
-            "engagement_rate": engagement,
-        }
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Live YouTube fetch failed for account %s: %s", account.id, exc)
-        return None
+
+    # Public tracking via API key — real subscriber/view counts, no OAuth.
+    if account.is_tracked and account.external_id:
+        if not youtube_service.is_public_configured():
+            return None
+        try:
+            stats = youtube_service.fetch_public_stats_by_channel_id(account.external_id)
+            return {
+                "follower_count": stats["subscriber_count"],
+                "view_count": stats["view_count"],
+                # Public stats expose no engagement; keep it honest (no fake value).
+                "engagement_rate": 0.0,
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Public YouTube fetch failed for account %s: %s", account.id, exc)
+            return None
+
+    if account.is_connected and account.access_token:
+        try:
+            token = decrypt_token(account.access_token)
+            stats = youtube_service.fetch_channel_stats(token)
+            engagement = mock_platform_service.generate_daily_point(account)["engagement_rate"]
+            return {
+                "follower_count": stats["subscriber_count"],
+                "view_count": stats["view_count"],
+                "engagement_rate": engagement,
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Live YouTube fetch failed for account %s: %s", account.id, exc)
+            return None
+    return None
 
 
 def backfill_account(account: SocialAccount, days: int = 30, seed_stats: dict | None = None) -> int:
@@ -74,9 +93,34 @@ def backfill_account(account: SocialAccount, days: int = 30, seed_stats: dict | 
     return created
 
 
+def record_public_snapshot(
+    account: SocialAccount, stats: dict, snap_date: date | None = None
+) -> bool:
+    """Persist one real snapshot for a tracked (public) channel from ``stats``.
+
+    Used right after a channel is tracked so the first data point is genuine and
+    dated today — never a fabricated historical curve.
+    """
+    snap_date = snap_date or date.today()
+    point = {
+        "follower_count": int(stats.get("subscriber_count", 0) or 0),
+        "view_count": int(stats.get("view_count", 0) or 0),
+        "engagement_rate": 0.0,
+    }
+    created = _upsert_snapshot(account, snap_date, point)
+    db.session.commit()
+    return created
+
+
 def snapshot_account(account: SocialAccount, snap_date: date | None = None) -> bool:
     snap_date = snap_date or date.today()
-    point = _live_point(account) or mock_platform_service.point_for_date(account, snap_date)
+    point = _live_point(account)
+    if point is None:
+        # Tracked (public) channels only ever store real data — skip if the live
+        # fetch is unavailable rather than fabricating a mock point.
+        if account.is_tracked:
+            return False
+        point = mock_platform_service.point_for_date(account, snap_date)
     created = _upsert_snapshot(account, snap_date, point)
     db.session.commit()
     return created
