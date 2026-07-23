@@ -86,15 +86,54 @@ def _build_prompt(generation_type: str, prompt_input: str) -> str:
 def _configured_providers() -> list[str]:
     order = []
     primary = current_app.config.get("AI_PRIMARY_PROVIDER", "anthropic")
-    for name in [primary, "anthropic", "openai", "gemini"]:
+    for name in [primary, "nvidia", "anthropic", "openai", "gemini"]:
         if name not in order:
             order.append(name)
     key_map = {
+        "nvidia": "NVIDIA_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
         "openai": "OPENAI_API_KEY",
         "gemini": "GOOGLE_API_KEY",
     }
     return [name for name in order if current_app.config.get(key_map.get(name, ""))]
+
+
+def _call_nvidia(prompt: str) -> str:
+    """Call NVIDIA NIM via its OpenAI-compatible chat completions API.
+
+    Uses ``requests`` (not the OpenAI SDK) so a mismatched ``httpx`` version
+    cannot break generation. Default model is DiffusionGemma on build.nvidia.com.
+    """
+    import requests
+
+    base = (current_app.config.get("NVIDIA_BASE_URL") or "").rstrip("/")
+    model = current_app.config.get("NVIDIA_MODEL") or "google/diffusiongemma-26b-a4b-it"
+    resp = requests.post(
+        f"{base}/chat/completions",
+        headers={
+            "Authorization": f"Bearer {current_app.config['NVIDIA_API_KEY']}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 600,
+            "temperature": 0.7,
+            "stream": False,
+        },
+        timeout=60,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    choices = data.get("choices") or []
+    if not choices:
+        raise RuntimeError("NVIDIA NIM returned no choices.")
+    message = choices[0].get("message") or {}
+    content = (message.get("content") or "").strip()
+    if not content:
+        raise RuntimeError("NVIDIA NIM returned an empty response.")
+    return content
 
 
 def _call_anthropic(prompt: str) -> str:
@@ -130,6 +169,7 @@ def _call_gemini(prompt: str) -> str:
 
 
 _PROVIDER_FUNCS = {
+    "nvidia": _call_nvidia,
     "anthropic": _call_anthropic,
     "openai": _call_openai,
     "gemini": _call_gemini,
