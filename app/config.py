@@ -73,6 +73,8 @@ class Config:
         "YOUTUBE_REDIRECT_URI",
         "http://127.0.0.1:5000/api/social-accounts/connect/youtube/callback",
     )
+    # API key for public (no-OAuth) channel tracking, SocialBlade-style.
+    YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
     # --- Billing ---
     STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
