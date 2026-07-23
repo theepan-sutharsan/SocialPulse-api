@@ -76,6 +76,16 @@ class Config:
     # API key for public (no-OAuth) channel tracking, SocialBlade-style.
     YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
+    # --- Instagram Graph API (OAuth; Business/Creator accounts only) ---
+    # Instagram has no public metrics endpoint, so real data requires OAuth via
+    # a Meta app. Unset => Instagram falls back to Demo Mode.
+    INSTAGRAM_APP_ID = os.getenv("INSTAGRAM_APP_ID")
+    INSTAGRAM_APP_SECRET = os.getenv("INSTAGRAM_APP_SECRET")
+    INSTAGRAM_REDIRECT_URI = os.getenv(
+        "INSTAGRAM_REDIRECT_URI",
+        "http://127.0.0.1:5000/api/social-accounts/connect/instagram/callback",
+    )
+
     # --- Billing ---
     STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
     STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")

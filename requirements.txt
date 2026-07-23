@@ -21,6 +21,9 @@ google-api-python-client==2.143.0
 google-auth==2.34.0
 google-auth-oauthlib==1.2.1
 
+# --- Instagram Graph API (OAuth HTTP calls) ---
+requests==2.34.2
+
 # --- Background jobs ---
 celery==5.4.0
 redis==5.0.8
