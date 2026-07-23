@@ -1,13 +1,20 @@
-"""SocialAccount — a connected (live) or demo social platform account.
+"""SocialAccount — a connected (OAuth), publicly-tracked, or demo account.
 
-OAuth tokens are stored encrypted at rest and never serialized. ``is_demo`` is
-True for seeded Instagram/TikTok/X accounts until live OAuth is available.
+OAuth tokens are stored encrypted at rest and never serialized. ``source``
+records how the account's data is obtained:
+
+* ``demo``   — deterministic mock data (seeded Instagram/TikTok/X channels).
+* ``oauth``  — the owner authorized the account; data comes from their token.
+* ``public`` — SocialBlade-style tracking of any public channel via the
+  YouTube Data API **key** (no login). ``external_id`` holds the channel id so
+  daily snapshots can re-fetch real stats. No fabricated history is stored.
 """
 
 from app.extensions import db
 from app.utils import iso, utc_now
 
 PLATFORMS = ("youtube", "instagram", "tiktok", "twitter")
+SOURCES = ("demo", "oauth", "public")
 
 
 class SocialAccount(db.Model):
@@ -28,6 +35,9 @@ class SocialAccount(db.Model):
     platform = db.Column(db.String(20), nullable=False)
     handle = db.Column(db.String(255), nullable=False)
     is_demo = db.Column(db.Boolean, default=True, nullable=False)
+    source = db.Column(db.String(20), default="demo", nullable=False)
+    # Platform-native identifier (e.g. YouTube channelId) for public tracking.
+    external_id = db.Column(db.String(64), nullable=True, index=True)
     access_token = db.Column(db.Text, nullable=True)  # encrypted
     refresh_token = db.Column(db.Text, nullable=True)  # encrypted
     connected_at = db.Column(db.DateTime, nullable=True)
@@ -46,7 +56,13 @@ class SocialAccount(db.Model):
 
     @property
     def is_connected(self) -> bool:
-        return bool(self.access_token) and not self.is_demo
+        """OAuth-connected account (owner authorized data access)."""
+        return self.source == "oauth"
+
+    @property
+    def is_tracked(self) -> bool:
+        """Public channel tracked via API key (SocialBlade-style, no OAuth)."""
+        return self.source == "public"
 
     def latest_snapshot(self):
         return self.snapshots[-1] if self.snapshots else None
@@ -61,8 +77,10 @@ class SocialAccount(db.Model):
             "workspace_id": self.workspace_id,
             "platform": self.platform,
             "handle": self.handle,
+            "source": self.source,
             "is_demo": self.is_demo,
             "is_connected": self.is_connected,
+            "is_tracked": self.is_tracked,
             "connected_at": iso(self.connected_at),
             "created_at": iso(self.created_at),
             "updated_at": iso(self.updated_at),
