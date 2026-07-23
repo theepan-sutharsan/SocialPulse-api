@@ -9,6 +9,23 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_DB_PATH}"
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-that-is-plenty-long-1234567890"
 os.environ["AI_PRIMARY_PROVIDER"] = "anthropic"  # no keys -> local fallback
 
+# Keep the suite hermetic: blank out real integration credentials so tests do
+# not depend on whatever is in the developer's local `.env`. Set (not pop) to ""
+# so python-dotenv's non-overriding load won't repopulate them from `.env`.
+# AI keys are blanked so generation tests exercise the deterministic local
+# fallback (as documented above) rather than calling real providers.
+for _var in (
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "GOOGLE_API_KEY",
+    "YOUTUBE_CLIENT_ID",
+    "YOUTUBE_CLIENT_SECRET",
+    "YOUTUBE_API_KEY",
+    "INSTAGRAM_APP_ID",
+    "INSTAGRAM_APP_SECRET",
+):
+    os.environ[_var] = ""
+
 import pytest  # noqa: E402
 
 from app import create_app  # noqa: E402
