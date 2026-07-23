@@ -81,6 +81,7 @@ def seed():
             platform="youtube",
             handle="Asha Creates",
             is_demo=False,
+            source="oauth",
             connected_at=utc_now(),
         )
         ig = SocialAccount(
@@ -123,6 +124,7 @@ def seed():
                     platform="youtube",
                     handle="Client One",
                     is_demo=False,
+                    source="oauth",
                     connected_at=utc_now(),
                 ),
                 SocialAccount(
