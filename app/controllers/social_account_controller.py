@@ -98,6 +98,7 @@ def _create_youtube_account(
             platform="youtube",
             handle=handle,
             is_demo=is_demo,
+            source="oauth",
             access_token=encrypt_token(access_token),
             refresh_token=encrypt_token(refresh_token),
             connected_at=utc_now() if access_token else utc_now(),
@@ -114,6 +115,80 @@ def _create_youtube_account(
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Could not connect YouTube account."}), 500
+
+
+def track_youtube():
+    """Track a public YouTube channel by URL/handle (SocialBlade-style).
+
+    Fetches public stats via the YouTube Data API **key** (no OAuth), stores the
+    channel as ``source="public"`` with its channel id, and records a single
+    real snapshot for today. No historical data is fabricated — the growth curve
+    accrues going forward via daily snapshots.
+    """
+    data = request.get_json(silent=True) or {}
+    raw = (data.get("url") or data.get("handle") or "").strip()
+    if not raw:
+        return jsonify({"errors": ["A channel URL or handle is required."]}), 400
+
+    if not youtube_service.is_public_configured():
+        return (
+            jsonify(
+                {"error": "YouTube tracking is not configured. Set YOUTUBE_API_KEY."}
+            ),
+            503,
+        )
+
+    try:
+        youtube_service.parse_channel_input(raw)  # fail fast on empty/garbage
+        stats = youtube_service.fetch_public_channel_stats(raw)
+    except ValueError as exc:
+        return jsonify({"errors": [str(exc)]}), 400
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except Exception as exc:  # noqa: BLE001 - surface upstream/API failures cleanly
+        return jsonify({"error": f"YouTube lookup failed: {exc}"}), 502
+
+    channel_id = stats.get("channel_id")
+    handle = stats.get("handle") or raw
+
+    # Reject a channel that is already tracked/connected in this workspace.
+    existing = None
+    if channel_id:
+        existing = SocialAccount.query.filter_by(
+            workspace_id=current_workspace.id,
+            platform="youtube",
+            external_id=channel_id,
+        ).first()
+    if existing is None:
+        existing = SocialAccount.query.filter_by(
+            workspace_id=current_workspace.id, platform="youtube", handle=handle
+        ).first()
+    if existing:
+        return jsonify({"error": "This YouTube channel is already tracked."}), 409
+
+    try:
+        account = SocialAccount(
+            workspace_id=current_workspace.id,
+            platform="youtube",
+            handle=handle,
+            is_demo=False,
+            source="public",
+            external_id=channel_id,
+            connected_at=utc_now(),
+        )
+        db.session.add(account)
+        db.session.commit()
+        # One real data point for today — never a fake 30-day backfill.
+        snapshot_service.record_public_snapshot(account, stats)
+        return (
+            jsonify(
+                {"message": "YouTube channel tracked.", "social_account": account.to_dict()}
+            ),
+            201,
+        )
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Could not track YouTube channel."}), 500
 
 
 def connect_demo_platform(platform: str):
@@ -140,6 +215,7 @@ def connect_demo_platform(platform: str):
             platform=platform,
             handle=handle,
             is_demo=True,
+            source="demo",
         )
         db.session.add(account)
         db.session.commit()

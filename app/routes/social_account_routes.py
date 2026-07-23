@@ -27,6 +27,12 @@ def youtube_callback():
     return ctrl.youtube_callback()
 
 
+@social_account_bp.post("/track/youtube")
+@roles_required(*EDITOR_ROLES)
+def track_youtube():
+    return ctrl.track_youtube()
+
+
 @social_account_bp.post("/connect/<platform>")
 @roles_required(*EDITOR_ROLES)
 def connect_demo(platform):
