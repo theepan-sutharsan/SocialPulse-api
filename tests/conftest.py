@@ -18,6 +18,7 @@ for _var in (
     "ANTHROPIC_API_KEY",
     "OPENAI_API_KEY",
     "GOOGLE_API_KEY",
+    "NVIDIA_API_KEY",
     "YOUTUBE_CLIENT_ID",
     "YOUTUBE_CLIENT_SECRET",
     "YOUTUBE_API_KEY",
@@ -37,11 +38,15 @@ def app():
     application = create_app()
     application.config.update(TESTING=True)
     with application.app_context():
+        from app.services import ai_service
+
+        ai_service._CACHE.clear()
         _db.drop_all()
         _db.create_all()
         yield application
         _db.session.remove()
         _db.drop_all()
+        ai_service._CACHE.clear()
 
 
 @pytest.fixture()
