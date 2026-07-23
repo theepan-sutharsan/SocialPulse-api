@@ -2,8 +2,9 @@
 
 Builds exactly one ``AnalyticsSnapshot`` row per connected account per day. The
 unique constraint on ``(social_account_id, snapshot_date)`` makes re-runs
-idempotent. Live accounts pull from ``youtube_service``; demo accounts use the
-deterministic ``mock_platform_service``.
+idempotent. Real accounts pull live stats (``youtube_service`` for connected or
+publicly-tracked channels, ``instagram_service`` for connected profiles); demo
+accounts use the deterministic ``mock_platform_service``.
 """
 
 import logging
@@ -12,7 +13,7 @@ from datetime import date, timedelta
 from app.extensions import db
 from app.models.analytics_snapshot_model import AnalyticsSnapshot
 from app.models.social_account_model import SocialAccount
-from app.services import mock_platform_service, youtube_service
+from app.services import instagram_service, mock_platform_service, youtube_service
 from app.utils.security import decrypt_token
 
 logger = logging.getLogger(__name__)
@@ -37,8 +38,27 @@ def _upsert_snapshot(account: SocialAccount, snap_date: date, point: dict) -> bo
     return True
 
 
+def _instagram_point(account: SocialAccount) -> dict | None:
+    """Fetch a real data point for an OAuth-connected Instagram account, or None."""
+    if not (account.is_connected and account.access_token):
+        return None
+    try:
+        token = decrypt_token(account.access_token)
+        stats = instagram_service.fetch_profile_stats(token, account.external_id)
+        return {
+            "follower_count": stats["follower_count"],
+            "view_count": 0,  # Profile reads expose no view metric.
+            "engagement_rate": 0.0,  # Not available from the basic profile.
+        }
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Live Instagram fetch failed for account %s: %s", account.id, exc)
+        return None
+
+
 def _live_point(account: SocialAccount) -> dict | None:
-    """Fetch a real data point for a YouTube account (OAuth or public), or None."""
+    """Fetch a real data point for a connected/tracked account, or None."""
+    if account.platform == "instagram":
+        return _instagram_point(account)
     if account.platform != "youtube":
         return None
 
@@ -116,9 +136,11 @@ def snapshot_account(account: SocialAccount, snap_date: date | None = None) -> b
     snap_date = snap_date or date.today()
     point = _live_point(account)
     if point is None:
-        # Tracked (public) channels only ever store real data — skip if the live
-        # fetch is unavailable rather than fabricating a mock point.
-        if account.is_tracked:
+        # Real accounts (publicly tracked, or OAuth-connected with a token) only
+        # ever store genuine data — skip if the live fetch is unavailable rather
+        # than fabricating a mock point. Demo/seeded accounts use mock data.
+        is_real = account.is_tracked or (account.is_connected and account.access_token)
+        if is_real:
             return False
         point = mock_platform_service.point_for_date(account, snap_date)
     created = _upsert_snapshot(account, snap_date, point)
