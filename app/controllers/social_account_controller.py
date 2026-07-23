@@ -13,7 +13,12 @@ from app.extensions import db
 from app.middleware import current_workspace
 from app.models.analytics_snapshot_model import AnalyticsSnapshot
 from app.models.social_account_model import PLATFORMS, SocialAccount
-from app.services import mock_platform_service, snapshot_service, youtube_service
+from app.services import (
+    instagram_service,
+    mock_platform_service,
+    snapshot_service,
+    youtube_service,
+)
 from app.utils import utc_now
 from app.utils.csv_utils import rows_to_csv_response
 from app.utils.pdf_utils import document_pdf_response
@@ -191,6 +196,105 @@ def track_youtube():
         return jsonify({"error": "Could not track YouTube channel."}), 500
 
 
+def connect_instagram():
+    """Connect a real Instagram account via the Meta Graph API (OAuth).
+
+    Instagram has no public metrics endpoint, so real data is only available for
+    a **Business/Creator** account the user authorizes. This endpoint:
+
+    * completes the connection when an OAuth ``code`` is posted back;
+    * returns an ``authorization_url`` when a Meta app is configured; and
+    * falls back to Demo Mode (or when ``demo: true`` is requested) so the
+      product stays usable without Meta credentials.
+    """
+    data = request.get_json(silent=True) or {}
+    code = data.get("code") or request.args.get("code")
+    if code:
+        return _complete_instagram_connection(code, data)
+
+    want_demo = bool(data.get("demo"))
+    if instagram_service.is_configured() and not want_demo:
+        auth_url, state = instagram_service.get_authorization_url()
+        return jsonify({"authorization_url": auth_url, "state": state}), 200
+
+    handle = (data.get("handle") or "").strip()
+    if not handle:
+        return jsonify({"errors": ["A handle is required for demo mode."]}), 400
+    return _create_demo_account("instagram", handle)
+
+
+def instagram_callback():
+    """OAuth redirect target. Bounces the code back to the SPA, which re-posts
+    it to ``/connect/instagram`` with the authenticated workspace context."""
+    code = request.args.get("code")
+    state = request.args.get("state", "")
+    if not code:
+        return jsonify({"error": "Missing OAuth code."}), 400
+    return redirect(
+        f"{Config.FRONTEND_URL}/oauth/instagram?code={code}&state={state}"
+    )
+
+
+def _complete_instagram_connection(code: str, data: dict):
+    try:
+        tokens = instagram_service.exchange_code(code)
+        stats = instagram_service.fetch_profile_stats(
+            tokens["access_token"], tokens.get("user_id")
+        )
+    except Exception as exc:  # noqa: BLE001 - surface as a clean API error
+        return jsonify({"error": f"Instagram connection failed: {exc}"}), 502
+    return _create_instagram_account(
+        handle=stats.get("username") or data.get("handle") or "Instagram Account",
+        access_token=tokens.get("access_token"),
+        external_id=stats.get("external_id") or tokens.get("user_id"),
+        seed_stats=stats,
+    )
+
+
+def _create_instagram_account(
+    handle, access_token=None, external_id=None, seed_stats=None
+):
+    existing = SocialAccount.query.filter_by(
+        workspace_id=current_workspace.id, platform="instagram", handle=handle
+    ).first()
+    if existing:
+        return jsonify({"error": "This Instagram account is already connected."}), 409
+    try:
+        account = SocialAccount(
+            workspace_id=current_workspace.id,
+            platform="instagram",
+            handle=handle,
+            is_demo=False,
+            source="oauth",
+            external_id=external_id,
+            access_token=encrypt_token(access_token),
+            connected_at=utc_now(),
+        )
+        db.session.add(account)
+        db.session.commit()
+        # One genuine data point for today — history accrues via daily snapshots.
+        if seed_stats:
+            snapshot_service.record_public_snapshot(
+                account,
+                {
+                    "subscriber_count": seed_stats.get("follower_count", 0),
+                    "view_count": 0,
+                },
+            )
+        return (
+            jsonify(
+                {
+                    "message": "Instagram account connected.",
+                    "social_account": account.to_dict(),
+                }
+            ),
+            201,
+        )
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Could not connect Instagram account."}), 500
+
+
 def connect_demo_platform(platform: str):
     platform = (platform or "").lower()
     if platform not in DEMO_PLATFORMS:
@@ -204,7 +308,11 @@ def connect_demo_platform(platform: str):
     handle = (data.get("handle") or "").strip()
     if not handle:
         return jsonify({"errors": ["A handle is required."]}), 400
+    return _create_demo_account(platform, handle)
 
+
+def _create_demo_account(platform: str, handle: str):
+    """Create a deterministic Demo Mode account with 30 days of mock history."""
     if SocialAccount.query.filter_by(
         workspace_id=current_workspace.id, platform=platform, handle=handle
     ).first():

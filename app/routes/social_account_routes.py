@@ -33,6 +33,17 @@ def track_youtube():
     return ctrl.track_youtube()
 
 
+@social_account_bp.post("/connect/instagram")
+@roles_required(*EDITOR_ROLES)
+def connect_instagram():
+    return ctrl.connect_instagram()
+
+
+@social_account_bp.get("/connect/instagram/callback")
+def instagram_callback():
+    return ctrl.instagram_callback()
+
+
 @social_account_bp.post("/connect/<platform>")
 @roles_required(*EDITOR_ROLES)
 def connect_demo(platform):
