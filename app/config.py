@@ -63,6 +63,14 @@ class Config:
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    # NVIDIA NIM (OpenAI-compatible) — e.g. DiffusionGemma on build.nvidia.com
+    NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
+    NVIDIA_BASE_URL = os.getenv(
+        "NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"
+    )
+    NVIDIA_MODEL = os.getenv(
+        "NVIDIA_MODEL", "google/diffusiongemma-26b-a4b-it"
+    )
     AI_PRIMARY_PROVIDER = os.getenv("AI_PRIMARY_PROVIDER", "anthropic")
     AI_CACHE_TTL_SECONDS = int(os.getenv("AI_CACHE_TTL_SECONDS", "300"))
 
