@@ -10,7 +10,8 @@ SIGKILL/OOM kills. We hardcode a conservative worker/thread count instead.
 
 import os
 
-bind = os.getenv("GUNICORN_BIND", "0.0.0.0:5000")
+port = os.getenv("PORT", "5000")
+bind = os.getenv("GUNICORN_BIND", f"0.0.0.0:{port}")
 # 2 workers keeps memory usage predictable (~500MB/worker on a 1GB limit).
 workers = int(os.getenv("GUNICORN_WORKERS", "2"))
 worker_class = "sync"
