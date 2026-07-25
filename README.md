@@ -71,6 +71,19 @@ python seed.py
 python run.py                  # http://127.0.0.1:5000
 ```
 
+### Railway deployment
+
+Railway runs the API with Gunicorn. The production configuration defaults to one
+threaded worker to stay within small-container memory limits. Do not configure
+workers from CPU count. Set these optional Railway variables only when the plan
+has sufficient memory:
+
+```text
+GUNICORN_WORKERS=1
+GUNICORN_THREADS=2
+```
+
+The server automatically binds to Railway's `PORT` variable.
 ### Background jobs (daily snapshots)
 
 ```bash
