@@ -214,10 +214,10 @@ def _call_gemini(prompt: str) -> str:
     url = f"{base}/models/{model}:generateContent"
     resp = requests.post(
         url,
-        params={"key": api_key},
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-goog-api-key": api_key,
         },
         json={
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],

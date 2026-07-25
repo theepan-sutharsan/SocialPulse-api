@@ -59,7 +59,7 @@ def test_call_gemini_posts_generate_content(app, monkeypatch):
         captured["url"]
         == "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     )
-    assert captured["params"]["key"] == "test-gemini-key"
+    assert captured["headers"]["X-goog-api-key"] == "test-gemini-key"
     assert captured["json"]["contents"][0]["parts"][0]["text"] == "Write a caption."
     assert captured["json"]["generationConfig"]["maxOutputTokens"] == 2000
 
