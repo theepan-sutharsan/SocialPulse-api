@@ -31,19 +31,27 @@ def _resolve_account(social_account_id):
     return account, None
 
 
-def _run_generation(generation_type: str, prompt_input: str, social_account_id=None):
+def _run_generation(
+    generation_type: str, prompt_input: str, social_account_id=None, provider=None
+):
     account, err = _resolve_account(social_account_id)
     if err:
         return err
 
+    provider = (provider or "").strip().lower() or None
+    if provider and provider not in ai_service.available_providers():
+        return jsonify({"errors": ["Selected AI provider is not configured."]}), 400
+
     workspace = current_workspace
     # Cache-aware credit gate: never call the provider with no credits.
-    is_cached = ai_service.peek_cache(generation_type, prompt_input) is not None
+    is_cached = ai_service.peek_cache(generation_type, prompt_input, provider) is not None
     if not is_cached and not has_available_credits(workspace, 1):
         return jsonify({"error": "AI credit limit reached. Upgrade your plan."}), 402
 
     try:
-        result = ai_service.generate(generation_type, prompt_input, workspace, account)
+        result = ai_service.generate(
+            generation_type, prompt_input, workspace, account, provider
+        )
     except ai_service.AIGenerationError:
         return jsonify({"error": "AI generation failed."}), 502
 
@@ -86,7 +94,7 @@ def generate_caption():
     platform = (data.get("platform") or "instagram").strip()
     tone = (data.get("tone") or "engaging").strip()
     prompt_input = f"Topic: {topic}\nPlatform: {platform}\nTone: {tone}"
-    return _run_generation("caption", prompt_input, data.get("social_account_id"))
+    return _run_generation("caption", prompt_input, data.get("social_account_id"), data.get("provider"))
 
 
 def generate_hashtags():
@@ -96,7 +104,7 @@ def generate_hashtags():
         return jsonify({"errors": ["A topic is required."]}), 400
     platform = (data.get("platform") or "instagram").strip()
     prompt_input = f"Topic: {topic}\nPlatform: {platform}"
-    return _run_generation("hashtags", prompt_input, data.get("social_account_id"))
+    return _run_generation("hashtags", prompt_input, data.get("social_account_id"), data.get("provider"))
 
 
 def generate_content_idea():
@@ -105,7 +113,7 @@ def generate_content_idea():
     if not niche:
         return jsonify({"errors": ["A niche or topic is required."]}), 400
     prompt_input = f"Niche: {niche}"
-    return _run_generation("content_idea", prompt_input, data.get("social_account_id"))
+    return _run_generation("content_idea", prompt_input, data.get("social_account_id"), data.get("provider"))
 
 
 def generate_viral_score():
@@ -113,7 +121,7 @@ def generate_viral_score():
     text = (data.get("text") or data.get("draft") or "").strip()
     if not text:
         return jsonify({"errors": ["Draft post text is required."]}), 400
-    return _run_generation("viral_score", text, data.get("social_account_id"))
+    return _run_generation("viral_score", text, data.get("social_account_id"), data.get("provider"))
 
 
 def generate_sentiment():
@@ -125,7 +133,12 @@ def generate_sentiment():
     if err:
         return err
     prompt_input = f"Sentiment analysis for {account.platform} @{account.handle}"
-    return _run_generation("sentiment", prompt_input, social_account_id)
+    return _run_generation("sentiment", prompt_input, social_account_id, data.get("provider"))
+
+
+def get_ai_providers():
+    providers = ai_service.available_providers()
+    return jsonify({"providers": providers, "default_provider": providers[0] if providers else None}), 200
 
 
 def get_ai_generations():
