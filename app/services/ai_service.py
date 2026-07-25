@@ -198,11 +198,51 @@ def _call_openai(prompt: str) -> str:
 
 
 def _call_gemini(prompt: str) -> str:
-    import google.generativeai as genai
+    """Call Google Gemini via the generateContent REST API.
 
-    genai.configure(api_key=current_app.config["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    return model.generate_content(prompt).text.strip()
+    Uses ``requests`` instead of ``google-generativeai`` so generation works on
+    Python builds where the protobuf-backed SDK fails to import.
+    """
+    import requests
+
+    api_key = current_app.config.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY is not configured.")
+
+    base = (current_app.config.get("GEMINI_BASE_URL") or "").rstrip("/")
+    model = current_app.config.get("GEMINI_MODEL") or "gemini-2.0-flash"
+    url = f"{base}/models/{model}:generateContent"
+    resp = requests.post(
+        url,
+        params={"key": api_key},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        json={
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.7,
+                "maxOutputTokens": 2000,
+            },
+        },
+        timeout=60,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    candidates = data.get("candidates") or []
+    if not candidates:
+        # Surface Gemini block/safety feedback when present.
+        feedback = data.get("promptFeedback") or {}
+        raise RuntimeError(
+            f"Gemini returned no candidates: {feedback or data}"
+        )
+    parts = ((candidates[0].get("content") or {}).get("parts")) or []
+    texts = [p.get("text", "") for p in parts if isinstance(p, dict)]
+    content = "".join(texts).strip()
+    if not content:
+        raise RuntimeError("Gemini returned an empty response.")
+    return content
 
 
 _PROVIDER_FUNCS = {
