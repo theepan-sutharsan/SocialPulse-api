@@ -86,11 +86,12 @@ def _build_prompt(generation_type: str, prompt_input: str) -> str:
 def _configured_providers() -> list[str]:
     order = []
     primary = current_app.config.get("AI_PRIMARY_PROVIDER", "anthropic")
-    for name in [primary, "nvidia", "anthropic", "openai", "gemini"]:
+    for name in [primary, "nvidia", "openrouter", "anthropic", "openai", "gemini"]:
         if name not in order:
             order.append(name)
     key_map = {
         "nvidia": "NVIDIA_API_KEY",
+        "openrouter": "OPENROUTER_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
         "openai": "OPENAI_API_KEY",
         "gemini": "GOOGLE_API_KEY",
@@ -136,6 +137,42 @@ def _call_nvidia(prompt: str) -> str:
     return content
 
 
+def _call_openrouter(prompt: str) -> str:
+    """Call OpenRouter's OpenAI-compatible chat completions API."""
+    import requests
+
+    base = (current_app.config.get("OPENROUTER_BASE_URL") or "").rstrip("/")
+    model = current_app.config.get("OPENROUTER_MODEL") or "openrouter/auto-beta"
+    resp = requests.post(
+        f"{base}/chat/completions",
+        headers={
+            "Authorization": f"Bearer {current_app.config['OPENROUTER_API_KEY']}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "HTTP-Referer": current_app.config.get("OPENROUTER_SITE_URL", ""),
+            "X-OpenRouter-Title": current_app.config.get(
+                "OPENROUTER_APP_NAME", "Pulse Social AI"
+            ),
+        },
+        json={
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 600,
+            "temperature": 0.7,
+            "stream": False,
+        },
+        timeout=60,
+    )
+    resp.raise_for_status()
+    choices = (resp.json().get("choices") or [])
+    if not choices:
+        raise RuntimeError("OpenRouter returned no choices.")
+    content = ((choices[0].get("message") or {}).get("content") or "").strip()
+    if not content:
+        raise RuntimeError("OpenRouter returned an empty response.")
+    return content
+
+
 def _call_anthropic(prompt: str) -> str:
     import anthropic
 
@@ -170,6 +207,7 @@ def _call_gemini(prompt: str) -> str:
 
 _PROVIDER_FUNCS = {
     "nvidia": _call_nvidia,
+    "openrouter": _call_openrouter,
     "anthropic": _call_anthropic,
     "openai": _call_openai,
     "gemini": _call_gemini,
