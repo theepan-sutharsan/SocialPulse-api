@@ -62,6 +62,8 @@ class Config:
     # --- AI providers ---
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    # OpenAI Responses API model used for text generation.
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     # Gemini (Google AI Studio) — REST generateContent. Prefer this over the
     # google-generativeai SDK which breaks on newer Python/protobuf combos.

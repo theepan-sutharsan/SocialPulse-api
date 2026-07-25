@@ -186,15 +186,19 @@ def _call_anthropic(prompt: str) -> str:
 
 
 def _call_openai(prompt: str) -> str:
+    """Generate text through OpenAI's Responses API."""
     from openai import OpenAI
 
     client = OpenAI(api_key=current_app.config["OPENAI_API_KEY"])
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        max_tokens=2000,
-        messages=[{"role": "user", "content": prompt}],
+    response = client.responses.create(
+        model=current_app.config.get("OPENAI_MODEL") or "gpt-4o-mini",
+        input=prompt,
+        max_output_tokens=2000,
     )
-    return completion.choices[0].message.content.strip()
+    content = (response.output_text or "").strip()
+    if not content:
+        raise RuntimeError("OpenAI returned an empty response.")
+    return content
 
 
 def _call_gemini(prompt: str) -> str:
