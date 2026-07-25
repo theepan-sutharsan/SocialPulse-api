@@ -24,29 +24,38 @@ class AIGenerationError(Exception):
 
 
 _CACHE: dict[str, tuple[float, dict]] = {}
+SUPPORTED_PROVIDERS = ("nvidia", "openrouter", "anthropic", "openai", "gemini")
 
 
 # --- Cache ------------------------------------------------------------------------
 
 
-def _cache_key(generation_type: str, prompt_input: str) -> str:
-    return hashlib.sha256(f"{generation_type}|{prompt_input}".encode()).hexdigest()
+def _cache_key(
+    generation_type: str, prompt_input: str, provider: str | None = None
+) -> str:
+    return hashlib.sha256(
+        f"{generation_type}|{prompt_input}|{provider or ''}".encode()
+    ).hexdigest()
 
 
-def peek_cache(generation_type: str, prompt_input: str) -> dict | None:
-    entry = _CACHE.get(_cache_key(generation_type, prompt_input))
+def peek_cache(
+    generation_type: str, prompt_input: str, provider: str | None = None
+) -> dict | None:
+    entry = _CACHE.get(_cache_key(generation_type, prompt_input, provider))
     if not entry:
         return None
     stored_at, value = entry
     ttl = current_app.config.get("AI_CACHE_TTL_SECONDS", 300)
     if time.time() - stored_at > ttl:
-        _CACHE.pop(_cache_key(generation_type, prompt_input), None)
+        _CACHE.pop(_cache_key(generation_type, prompt_input, provider), None)
         return None
     return value
 
 
-def _store_cache(generation_type: str, prompt_input: str, value: dict) -> None:
-    _CACHE[_cache_key(generation_type, prompt_input)] = (time.time(), value)
+def _store_cache(
+    generation_type: str, prompt_input: str, value: dict, provider: str | None = None
+) -> None:
+    _CACHE[_cache_key(generation_type, prompt_input, provider)] = (time.time(), value)
 
 
 # --- Prompt building --------------------------------------------------------------
@@ -97,6 +106,11 @@ def _configured_providers() -> list[str]:
         "gemini": "GOOGLE_API_KEY",
     }
     return [name for name in order if current_app.config.get(key_map.get(name, ""))]
+
+
+def available_providers() -> list[str]:
+    """Return the configured providers that users may select."""
+    return _configured_providers()
 
 
 def _call_nvidia(prompt: str) -> str:
@@ -261,14 +275,25 @@ _PROVIDER_FUNCS = {
 # --- Public API -------------------------------------------------------------------
 
 
-def generate(generation_type, prompt_input, workspace=None, social_account=None) -> dict:
-    """Return ``{"result": str, "provider": str, "cached": bool}``."""
-    cached = peek_cache(generation_type, prompt_input)
+def generate(
+    generation_type, prompt_input, workspace=None, social_account=None, provider=None
+) -> dict:
+    """Return ``{"result": str, "provider": str, "cached": bool}``.
+
+    A selected provider is used exclusively; otherwise the configured fallback
+    chain is used.
+    """
+    if provider and provider not in SUPPORTED_PROVIDERS:
+        raise AIGenerationError("Unsupported AI provider.")
+
+    cached = peek_cache(generation_type, prompt_input, provider)
     if cached is not None:
         return {"result": cached["result"], "provider": cached["provider"], "cached": True}
 
     prompt = _build_prompt(generation_type, prompt_input)
-    providers = _configured_providers()
+    providers = [provider] if provider else _configured_providers()
+    if provider and provider not in _configured_providers():
+        raise AIGenerationError("Selected AI provider is not configured.")
 
     last_error = None
     for name in providers:
@@ -276,7 +301,7 @@ def generate(generation_type, prompt_input, workspace=None, social_account=None)
             result = _PROVIDER_FUNCS[name](prompt)
             if result:
                 payload = {"result": result, "provider": name}
-                _store_cache(generation_type, prompt_input, payload)
+                _store_cache(generation_type, prompt_input, payload, provider)
                 return {**payload, "cached": False}
         except Exception as exc:  # noqa: BLE001 - fall through to next provider
             last_error = exc
@@ -286,7 +311,7 @@ def generate(generation_type, prompt_input, workspace=None, social_account=None)
         # No external providers configured — deterministic local fallback.
         result = _local_generate(generation_type, prompt_input, social_account)
         payload = {"result": result, "provider": "local-fallback"}
-        _store_cache(generation_type, prompt_input, payload)
+        _store_cache(generation_type, prompt_input, payload, provider)
         return {**payload, "cached": False}
 
     raise AIGenerationError(str(last_error) if last_error else "All AI providers failed.")

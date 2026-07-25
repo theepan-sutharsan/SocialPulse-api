@@ -8,6 +8,12 @@ from app.middleware import EDITOR_ROLES, roles_required
 generate_bp = Blueprint("generate", __name__, url_prefix="/api/generate")
 
 
+@generate_bp.get("/providers")
+@roles_required(*EDITOR_ROLES)
+def providers():
+    return ctrl.get_ai_providers()
+
+
 @generate_bp.post("/caption")
 @roles_required(*EDITOR_ROLES)
 def caption():
