@@ -119,7 +119,7 @@ def _call_nvidia(prompt: str) -> str:
         json={
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 600,
+            "max_tokens": 2000,
             "temperature": 0.7,
             "stream": False,
         },
@@ -157,7 +157,7 @@ def _call_openrouter(prompt: str) -> str:
         json={
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 600,
+            "max_tokens": 2000,
             "temperature": 0.7,
             "stream": False,
         },
@@ -179,7 +179,7 @@ def _call_anthropic(prompt: str) -> str:
     client = anthropic.Anthropic(api_key=current_app.config["ANTHROPIC_API_KEY"])
     message = client.messages.create(
         model="claude-3-5-sonnet-latest",
-        max_tokens=600,
+        max_tokens=2000,
         messages=[{"role": "user", "content": prompt}],
     )
     return message.content[0].text.strip()
@@ -191,7 +191,7 @@ def _call_openai(prompt: str) -> str:
     client = OpenAI(api_key=current_app.config["OPENAI_API_KEY"])
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
-        max_tokens=600,
+        max_tokens=2000,
         messages=[{"role": "user", "content": prompt}],
     )
     return completion.choices[0].message.content.strip()
