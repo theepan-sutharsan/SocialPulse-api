@@ -62,7 +62,16 @@ class Config:
     # --- AI providers ---
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    # OpenAI Responses API model used for text generation.
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    # Gemini (Google AI Studio) — REST generateContent. Prefer this over the
+    # google-generativeai SDK which breaks on newer Python/protobuf combos.
+    GEMINI_BASE_URL = os.getenv(
+        "GEMINI_BASE_URL",
+        "https://generativelanguage.googleapis.com/v1beta",
+    )
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
     # NVIDIA NIM (OpenAI-compatible) — e.g. DiffusionGemma on build.nvidia.com
     NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
     NVIDIA_BASE_URL = os.getenv(
