@@ -71,6 +71,16 @@ class Config:
     NVIDIA_MODEL = os.getenv(
         "NVIDIA_MODEL", "google/diffusiongemma-26b-a4b-it"
     )
+    # OpenRouter unified model API (OpenAI-compatible).
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+    OPENROUTER_BASE_URL = os.getenv(
+        "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+    )
+    OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/auto-beta")
+    OPENROUTER_SITE_URL = os.getenv(
+        "OPENROUTER_SITE_URL", "http://localhost:3000"
+    )
+    OPENROUTER_APP_NAME = os.getenv("OPENROUTER_APP_NAME", "Pulse Social AI")
     AI_PRIMARY_PROVIDER = os.getenv("AI_PRIMARY_PROVIDER", "anthropic")
     AI_CACHE_TTL_SECONDS = int(os.getenv("AI_CACHE_TTL_SECONDS", "300"))
 
