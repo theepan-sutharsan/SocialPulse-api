@@ -33,6 +33,8 @@ PLAN_FEATURES = {
 
 
 def get_plans():
+    from flask import current_app
+
     plans = [
         {
             "tier": tier,
@@ -43,7 +45,17 @@ def get_plans():
         }
         for tier in ("free", "pro", "agency")
     ]
-    return jsonify({"plans": plans}), 200
+    available_providers = []
+    if current_app.config.get("STRIPE_SECRET_KEY"):
+        available_providers.append("stripe")
+    if current_app.config.get("RAZORPAY_KEY_ID"):
+        available_providers.append("razorpay")
+
+    return jsonify({
+        "plans": plans,
+        "available_providers": available_providers,
+        "stripe_publishable_key": current_app.config.get("STRIPE_PUBLISHABLE_KEY"),
+    }), 200
 
 
 def create_checkout():
