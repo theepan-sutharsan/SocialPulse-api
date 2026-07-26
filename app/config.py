@@ -89,7 +89,7 @@ class Config:
     OPENROUTER_SITE_URL = os.getenv(
         "OPENROUTER_SITE_URL", "http://localhost:3000"
     )
-    OPENROUTER_APP_NAME = os.getenv("OPENROUTER_APP_NAME", "Pulse Social AI")
+    OPENROUTER_APP_NAME = os.getenv("OPENROUTER_APP_NAME", "Social Pulse")
     AI_PRIMARY_PROVIDER = os.getenv("AI_PRIMARY_PROVIDER", "anthropic")
     AI_CACHE_TTL_SECONDS = int(os.getenv("AI_CACHE_TTL_SECONDS", "300"))
 

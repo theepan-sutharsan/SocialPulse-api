@@ -1,6 +1,6 @@
-# AI Social Media Analytics & Content SaaS — API
+# Social Pulse — API
 
-Flask REST API for a multi-tenant, AI-powered social media analytics & content
+Flask REST API for **Social Pulse**, a multi-tenant, AI-powered social media analytics & content
 platform. Creators connect social accounts, a daily job records SocialBlade-style
 growth snapshots, and an AI layer generates captions/hashtags/ideas/viral-score/
 sentiment — gated behind freemium billing.
