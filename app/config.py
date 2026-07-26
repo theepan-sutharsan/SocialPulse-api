@@ -112,6 +112,7 @@ class Config:
         "INSTAGRAM_REDIRECT_URI",
         "http://127.0.0.1:5000/api/social-accounts/connect/instagram/callback",
     )
+    INSTAGRAM_VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "")
 
     # --- Billing ---
     STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
