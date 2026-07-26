@@ -1,3 +1,17 @@
+<<<<<<< HEAD
+"""Gunicorn production config tuned for small container deployments."""
+
+import os
+
+# Railway plans typically have limited memory. One gthread worker is enough for
+# this synchronous Flask API and avoids multiplying the application's memory
+# footprint by the container CPU count.
+bind = os.getenv("GUNICORN_BIND", f"0.0.0.0:{os.getenv('PORT', '5000')}")
+workers = int(os.getenv("GUNICORN_WORKERS", "1"))
+worker_class = "gthread"
+threads = int(os.getenv("GUNICORN_THREADS", "2"))
+timeout = int(os.getenv("GUNICORN_TIMEOUT", "60"))
+=======
 """Gunicorn production config.
 
 Memory-optimized for constrained environments (e.g. Railway Hobby plan,
@@ -21,6 +35,7 @@ threads = int(os.getenv("GUNICORN_THREADS", "1"))
 timeout = int(os.getenv("GUNICORN_TIMEOUT", "120"))
 # Allow workers time to finish in-flight requests during graceful restarts.
 graceful_timeout = int(os.getenv("GUNICORN_GRACEFUL_TIMEOUT", "30"))
+>>>>>>> f6b7fa749ae00cbb41ecb6caae912cbb702c0dfb
 accesslog = "-"
 errorlog = "-"
 loglevel = os.getenv("GUNICORN_LOGLEVEL", "info")

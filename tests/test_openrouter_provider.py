@@ -48,7 +48,7 @@ def test_call_openrouter_posts_chat_completion(app, monkeypatch):
             OPENROUTER_BASE_URL="https://openrouter.ai/api/v1",
             OPENROUTER_MODEL="openrouter/auto-beta",
             OPENROUTER_SITE_URL="https://pulse.example",
-            OPENROUTER_APP_NAME="Pulse Social AI",
+            OPENROUTER_APP_NAME="Social Pulse",
         )
         result = ai_service._call_openrouter("Write a caption.")
 
@@ -56,7 +56,7 @@ def test_call_openrouter_posts_chat_completion(app, monkeypatch):
     assert captured["url"] == "https://openrouter.ai/api/v1/chat/completions"
     assert captured["headers"]["Authorization"] == "Bearer or-test"
     assert captured["headers"]["HTTP-Referer"] == "https://pulse.example"
-    assert captured["headers"]["X-OpenRouter-Title"] == "Pulse Social AI"
+    assert captured["headers"]["X-OpenRouter-Title"] == "Social Pulse"
     assert captured["json"]["model"] == "openrouter/auto-beta"
     assert captured["json"]["messages"][0]["content"] == "Write a caption."
     assert captured["json"]["stream"] is False

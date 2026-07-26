@@ -165,7 +165,7 @@ def _call_openrouter(prompt: str) -> str:
             "Content-Type": "application/json",
             "HTTP-Referer": current_app.config.get("OPENROUTER_SITE_URL", ""),
             "X-OpenRouter-Title": current_app.config.get(
-                "OPENROUTER_APP_NAME", "Pulse Social AI"
+                "OPENROUTER_APP_NAME", "Social Pulse"
             ),
         },
         json={

@@ -1,6 +1,6 @@
-# AI Social Media Analytics & Content SaaS — API
+# Social Pulse — API
 
-Flask REST API for a multi-tenant, AI-powered social media analytics & content
+Flask REST API for **Social Pulse**, a multi-tenant, AI-powered social media analytics & content
 platform. Creators connect social accounts, a daily job records SocialBlade-style
 growth snapshots, and an AI layer generates captions/hashtags/ideas/viral-score/
 sentiment — gated behind freemium billing.
@@ -71,6 +71,19 @@ python seed.py
 python run.py                  # http://127.0.0.1:5000
 ```
 
+### Railway deployment
+
+Railway runs the API with Gunicorn. The production configuration defaults to one
+threaded worker to stay within small-container memory limits. Do not configure
+workers from CPU count. Set these optional Railway variables only when the plan
+has sufficient memory:
+
+```text
+GUNICORN_WORKERS=1
+GUNICORN_THREADS=2
+```
+
+The server automatically binds to Railway's `PORT` variable.
 ### Background jobs (daily snapshots)
 
 ```bash
