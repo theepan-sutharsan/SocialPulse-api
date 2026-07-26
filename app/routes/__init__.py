@@ -19,6 +19,8 @@ def register_blueprints(app: Flask) -> None:
     from app.routes.social_account_routes import social_account_bp
     from app.routes.workspace_routes import workspace_bp
 
+    from app.routes.webhook_routes import webhook_bp
+
     for blueprint in (
         auth_bp,
         workspace_bp,
@@ -34,5 +36,6 @@ def register_blueprints(app: Flask) -> None:
         notification_bp,
         referral_bp,
         settings_bp,
+        webhook_bp,
     ):
         app.register_blueprint(blueprint)
